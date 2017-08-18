@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>Sakuraio test</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyACB69KsPYIbXgw3msn19eKbRnu8Ho1BL4&callback=initMap" async defer></script> -->
+    <script src="googleMaps.js" async defer></script>
+    <script>
+      var map, marker;
+      var LatLng = {lat: 35.681167, lng: 139.767052};
+      var host = window.document.location.host.replace(/:.*/, '');
+      var ws = new WebSocket('wss://api.sakura.io/ws/v1/38c7d1d9-29d0-4051-99d4-154f4d4041b1');
+
+      function mapUpdate(LatLng) {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: LatLng,
+          zoom: 15
+        });
+      }
+      function markerUpdate(LatLng) {
+        marker = new google.maps.Marker({
+          position: LatLng,
+          map: map
+        });
+      }
+
+      function initMap() {
+        mapUpdate(LatLng);
+        markerUpdate(LatLng);
+      }
+
+      ws.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        if (data.type == 'channels') {
+          var value = data.payload.channels[0];
+          console.log(value);
+          if (value.channel == 0) {
+            LatLng.lat = value.value;
+          }
+          if (value.channel == 1) {
+            LatLng.lng = value.value;
+          }
+          marker.setMap(null);
+          markerUpdate(LatLng);
+        }
+      }
+    </script>
+  </body>
+</html>
